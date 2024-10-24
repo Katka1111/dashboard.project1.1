@@ -14,6 +14,8 @@ import type { NextRequest } from "next/server";
 
 import { clerkMiddleware, getAuth } from "@clerk/nextjs/server";
 
+console.log("Middleware NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:", process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
 const publicRoutes = ["/", "/api/public"];
 
 export default clerkMiddleware(async (auth, req) => {
