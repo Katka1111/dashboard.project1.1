@@ -1,16 +1,31 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+// Remove the declaration since these functions are already defined in the package
+// If you need to extend or modify the types, consider using interface merging instead
+// For example:
+// declare module '@clerk/nextjs/server' {
+//   interface Auth {
+//     // Add any additional properties here
+//   }
+// }
 
-export default clerkMiddleware((auth, req) => {
-  const publicRoutes = ["/", "/api/public"];
-  
+// If you still need to use custom types, consider creating a separate types file
+// and importing it where needed, rather than declaring them in the middleware
+
+import { clerkMiddleware, getAuth } from "@clerk/nextjs/server";
+
+const publicRoutes = ["/", "/api/public"];
+
+export default clerkMiddleware(async (auth, req) => {
   if (publicRoutes.includes(req.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
-  if (!auth.userId) {
+  const { userId } = await getAuth(req);
+
+  if (!userId && !publicRoutes.includes(req.nextUrl.pathname)) {
     const signInUrl = new URL('/sign-in', req.url);
-    signInUrl.searchParams.set('redirect_url', req.url);
+    signInUrl.searchParams.set('redirect_url', req.nextUrl.pathname);
     return NextResponse.redirect(signInUrl);
   }
 
