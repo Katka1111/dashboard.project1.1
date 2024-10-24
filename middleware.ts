@@ -14,12 +14,12 @@ export default clerkMiddleware((auth: ClerkMiddlewareAuth, req: NextRequest) => 
   }
 
   // Handle authenticated requests
-  if (auth.isPublicRoute) {
+  if (auth.userId) {
     return NextResponse.next();
   }
 
   // Handle non-authenticated requests to protected routes
-  if (!auth.isPublicRoute && protectedRoutes.some(route => req.nextUrl.pathname.match(route))) {
+  if (!auth.userId && protectedRoutes.some(route => req.nextUrl.pathname.match(route))) {
     const signInUrl = new URL('/sign-in', req.url);
     signInUrl.searchParams.set('redirect_url', req.url);
     return NextResponse.redirect(signInUrl);
