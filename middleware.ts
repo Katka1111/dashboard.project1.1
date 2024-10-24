@@ -1,7 +1,20 @@
-import { authMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export default authMiddleware({
-  publicRoutes: ["/", "/api/public"],
+const publicRoutes = ["/", "/api/public"];
+
+export default clerkMiddleware((auth, req) => {
+  if (publicRoutes.includes(req.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
+
+  if (!auth.userId) {
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', req.url);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  return NextResponse.next();
 });
 
 export const config = {
