@@ -8,8 +8,8 @@ const protectedRoutes = createRouteMatcher(['/dashboard(.*)']);
 export default clerkMiddleware(async (_, req: NextRequest) => {
   if (protectedRoutes(req)) {
     // Protect dashboard routes
-    const session = await auth().getSession();
-    if (!session) {
+    const { userId } = await auth();
+    if (!userId) {
       const signInUrl = new URL('/sign-in', req.url);
       signInUrl.searchParams.set('redirect_url', req.url);
       return NextResponse.redirect(signInUrl);
