@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher, auth } from "@clerk/nextjs/server";
 import type { NextRequest } from 'next/server';
 
 // Define protected routes
 const protectedRoutes = createRouteMatcher(['/dashboard(.*)']);
 
-export default clerkMiddleware((auth, req: NextRequest) => {
+export default clerkMiddleware(async (_, req: NextRequest) => {
   if (protectedRoutes(req)) {
     // Protect dashboard routes
-    return auth().protect();
+    const session = await auth().getSession();
+    if (!session) {
+      const signInUrl = new URL('/sign-in', req.url);
+      signInUrl.searchParams.set('redirect_url', req.url);
+      return NextResponse.redirect(signInUrl);
+    }
   }
 
   // For all other cases, continue with the request
