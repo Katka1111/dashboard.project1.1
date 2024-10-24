@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server';
 // Define protected routes
 const protectedRoutes = ['/dashboard-project1-1.vercel.app(.*)'];
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware((auth: ClerkMiddlewareAuth, req: NextRequest) => {
   const isPublicRoute = !protectedRoutes.some(route => req.nextUrl.pathname.match(route));
 
   if (isPublicRoute) {
@@ -14,14 +14,12 @@ export default clerkMiddleware((auth, req) => {
   }
 
   // Handle authenticated requests
-  if (auth.userId && protectedRoutes.some(route => req.nextUrl.pathname.match(route))) {
-    // User is authenticated and trying to access a protected route
-    // You can add additional logic here if needed
+  if (auth.isPublicRoute) {
     return NextResponse.next();
   }
 
   // Handle non-authenticated requests to protected routes
-  if (!auth.userId && protectedRoutes.some(route => req.nextUrl.pathname.match(route))) {
+  if (!auth.isPublicRoute && protectedRoutes.some(route => req.nextUrl.pathname.match(route))) {
     const signInUrl = new URL('/sign-in', req.url);
     signInUrl.searchParams.set('redirect_url', req.url);
     return NextResponse.redirect(signInUrl);
