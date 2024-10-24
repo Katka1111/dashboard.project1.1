@@ -1,26 +1,31 @@
 import { NextResponse } from 'next/server';
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { authMiddleware } from "@clerk/nextjs";
 import type { NextRequest } from 'next/server';
 
 
-const isProtectedRoute = createRouteMatcher([
-    '/dashboard-project1-1.vercel.app(.*)'
-]);
-export default clerkMiddleware((auth, req) => {
-  if (isProtectedRoute(req)) {
-    return auth.protect();
-  }
+// Define protected routes
+const protectedRoutes = ['/dashboard-project1-1.vercel.app(.*)'];
 
-  // You can add custom logic here based on the user's authentication status
-  const { userId } = auth;
-  if (!userId) {
-    // If the user is not authenticated, you can redirect them or return a response
-    // For example:
-    // return NextResponse.redirect(new URL('/sign-in', req.url));
-  }
+export default authMiddleware({
+  publicRoutes: (req) => !protectedRoutes.some(route => req.nextUrl.pathname.match(route)),
+  afterAuth(auth, req, evt) {
+    // Handle authenticated requests
+    if (auth.userId && protectedRoutes.some(route => req.nextUrl.pathname.match(route))) {
+      // User is authenticated and trying to access a protected route
+      // You can add additional logic here if needed
+      return NextResponse.next();
+    }
 
-  // Continue with the request
-  return NextResponse.next();
+    // Handle non-authenticated requests to protected routes
+    if (!auth.userId && protectedRoutes.some(route => req.nextUrl.pathname.match(route))) {
+      const signInUrl = new URL('/sign-in', req.url);
+      signInUrl.searchParams.set('redirect_url', req.url);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    // For all other cases, continue with the request
+    return NextResponse.next();
+  },
 });
 
 export const config = {
